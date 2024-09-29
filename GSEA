@@ -1,0 +1,33 @@
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install(c("clusterProfiler", "org.Hs.eg.db", "enrichplot", "DOSE"))
+
+
+# Load necessary libraries
+library(clusterProfiler)
+library(org.Hs.eg.db)  # Human gene annotations (replace with relevant organism if needed)
+library(enrichplot)    # For visualization
+library(DOSE)          # Additional functions for GSEA
+
+# Load DESeq2 results
+res <- read.csv("differential_expression_results.csv", row.names = 1)
+
+# Prepare gene list for GSEA (log2 fold change values sorted)
+gene_list <- res$log2FoldChange
+names(gene_list) <- rownames(res)
+gene_list <- sort(gene_list, decreasing = TRUE)
+
+# Run GSEA analysis using clusterProfiler (Biological Process ontology)
+gsea_res <- gseGO(geneList = gene_list, 
+                  OrgDb = org.Hs.eg.db,  # Using human gene database, change for other organisms
+                  ont = "BP",            # Ontology: BP (Biological Process), MF (Molecular Function), CC (Cellular Component)
+                  keyType = "ENSEMBL",   # Gene identifier type, e.g., "ENSEMBL", "SYMBOL"
+                  pvalueCutoff = 0.05,   # p-value threshold for significance
+                  verbose = FALSE)
+
+# Plot the GSEA results
+dotplot(gsea_res) + ggtitle("GSEA Dotplot for Biological Process")
+ridgeplot(gsea_res) + ggtitle("GSEA Ridgeplot for Biological Process")
+gseaplot2(gsea_res, geneSetID = 1, title = "Top Enriched Pathway")
+
+# Save the GSEA results to a CSV file
+write.csv(as.data.frame(gsea_res), file = "gsea_results.csv")
