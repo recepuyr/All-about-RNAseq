@@ -1,0 +1,27 @@
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install(c("clusterProfiler", "org.Hs.eg.db", "AnnotationDbi", "enrichplot"))
+
+
+# Load necessary libraries
+library(clusterProfiler)
+library(org.Hs.eg.db)  # Human gene annotations (replace for other organisms)
+library(enrichplot)
+
+# Load the filtered DE genes (DESeq2 filtered results)
+res_filtered <- read.csv("differential_expression_results.csv", row.names = 1)
+deg_genes <- rownames(res_filtered)
+
+# Perform GO enrichment analysis for Biological Process (BP)
+go_enrich <- enrichGO(gene = deg_genes, 
+                      OrgDb = org.Hs.eg.db,  # Human gene annotation database
+                      keyType = "ENSEMBL",   # Gene ID type, e.g., ENSEMBL
+                      ont = "BP",            # Ontology: BP (Biological Process), MF, CC
+                      pvalueCutoff = 0.05)
+
+# Visualize GO enrichment results
+dotplot(go_enrich) + ggtitle("GO Enrichment Dotplot for Biological Process")
+barplot(go_enrich, showCategory = 10) + ggtitle("Top 10 GO Enrichment Terms")
+emapplot(go_enrich) + ggtitle("GO Enrichment Network Plot")
+
+# Save the GO results to a CSV file
+write.csv(as.data.frame(go_enrich), file = "go_enrichment_results.csv")
