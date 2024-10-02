@@ -49,9 +49,21 @@ if (nrow(quality_issues) > 0) {
     print("There is no adaptor problem.")
 }
 
-# ######back to bash
 
-sudo apt-get install star  # for Ubuntu/Linux 
+
+# ######back to bash
+# for multidata trimming:
+for r1 in /Users/Fastq_files/*_R1_*.fastq
+do
+    r2="${r1/_R1_/_R2_}"  # R2 dosyasının ismini otomatik oluşturur
+    trim_galore --paired "$r1" "$r2" -o "/Users/merveyilmaz/Desktop/butun_belgeler/Acelya_Hocam/calismalar/Nanoplastic/Transkriptomic/Fastq_files/trimmed_fastqs"
+done
+
+
+brew install star
+  # for Ubuntu/Linux 
+
+STAR --version # check version and install
 
 # Indexing the reference genome with STAR
 
@@ -65,9 +77,11 @@ STAR --runThreadN 8 --runMode genomeGenerate \
 mkdir -p star_output  # Hizalama sonuçları için bir klasör oluşturun
 for sample in trimmed/*_val_1.fq.gz
 do
-    # Dosya isimlerinden base adını çıkaralım
+    # Let's remove the base name from the file names
     base=$(basename ${sample} "_val_1.fq.gz")
-    
+
+####It is recommended to perform this analysis with access to Supercomputers. 
+
     STAR --runThreadN 8 \
          --genomeDir star_index \  # Önceden oluşturduğunuz indeks klasörü
          --readFilesIn trimmed/${base}_val_1.fq.gz trimmed/${base}_val_2.fq.gz \  # Trimlenmiş paired-end dosyalar
